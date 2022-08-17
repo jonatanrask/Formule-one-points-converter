@@ -1,6 +1,7 @@
 package application;
 
 import model.entities.Driver;
+import model.exception.SearchException;
 import model.services.ReadApiService;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -25,31 +26,40 @@ public class Program {
         System.out.println("Qual o ano da temporada que gostaria de fazer a conversão?");
         int year = sc.nextInt();
         int gpNumber = 1;
+        try {
+            readApiService.errorRead(year);
+            while (true) {
 
-        while (true) {
-            String uri = "F:\\xml\\" + gpNumber + ".xml";
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-            Document doc = documentBuilder.parse(uri);
-            NodeList qntdrivers = doc.getElementsByTagName("Driver");
+                String uri = "http://ergast.com/api/f1/" + year + "/" + gpNumber + "/";
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder documentBuilder = factory.newDocumentBuilder();
+                Document doc = documentBuilder.parse(uri);
+                NodeList qntdrivers = doc.getElementsByTagName("Driver");
 
-            if (readApiService.lastRace(uri) == 0) {
-                break;
-            }
-            for (int i = 0; i < qntdrivers.getLength(); i++) {
-                int points = readApiService.raceResult(i, uri);
-                String name = readApiService.driverName(i, uri);
-                int hotLap = readApiService.hotLap(i, uri);
-                Driver driver = new Driver();
-                Driver hasDriver = driver.hasDriver(driverList, name);
-                if (hasDriver == null) {
-                    driverList.add(new Driver(name, driver.newPoints(points, hotLap)));
-                } else {
-                    hasDriver.totalPoint(points, hotLap);
+                if (readApiService.lastRace(uri) == 0) {
+                    break;
                 }
+                for (int i = 0; i < qntdrivers.getLength(); i++) {
+                    int points = readApiService.raceResult(i, uri);
+                    String name = readApiService.driverName(i, uri);
+                    int hotLap = readApiService.hotLap(i, uri);
+                    Driver driver = new Driver();
+                    Driver hasDriver = driver.hasDriver(driverList, name);
+                    if (hasDriver == null) {
+                        driverList.add(new Driver(name, driver.newPoints(points, hotLap)));
+                    } else {
+                        hasDriver.totalPoint(points, hotLap);
+                    }
+                }
+                gpNumber++;
             }
-            gpNumber++;
+
+        } catch (IOException ioException) {
+            System.out.println(ioException.getMessage());
+        } catch (SearchException searchException){
+            System.out.println(searchException.getMessage());
         }
+
         Collections.sort(driverList);
         int placement = 1;
         for (Driver driver : driverList) {

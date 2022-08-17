@@ -1,5 +1,6 @@
 package model.services;
 
+import model.exception.SearchException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -73,5 +74,13 @@ public class ReadApiService {
             result = Integer.parseInt(element.getAttribute("total"));;
         }
         return result;
+    }
+    public void errorRead(int year){
+        if(year > 2018 && year < 2023){
+            throw new SearchException("Temporada já está no regulamento atual!");
+        }
+        else if(year < 1950 || year > 2022){
+            throw new SearchException("Temporada inexistente");
+        }
     }
 }
